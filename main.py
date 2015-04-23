@@ -5,6 +5,7 @@ Features:
 - Write to file - insert date
 '''
 from datetime import datetime
+import sqlite3
 
 
 def read_entry():   # find
@@ -53,15 +54,41 @@ def write_entry():  # write line by line to a string, to be appended to file thr
             print()
             writing = False
         else:
-            entry += entry_row + "\n"
-    s = "Entry date: {0} o'clock\n{1}".format(str(datetime.now())[:16], entry)
-    return s
+            entry += entry_row
+    if entry != "":
+        return entry
+
+
+def select_entry(s):
+    conn = sqlite3.connect("Journal.db")
+    cur = conn.cursor()
+    try:
+        cur.execute('''SELECT Entry FROM Entries WHERE ID=?;''', s)
+        row = cur.fetchone()
+        if row:
+            print(row)
+        else:
+            print("Invalid entry.\n")
+    except sqlite3.OperationalError:
+        print("No entries yet. Maybe you should write one...\n")
+
+    conn.close()
 
 
 def insert_entry(s):    # writes a string collected by write_entry
-    file = open("journal.txt", "a")
-    file.write("{0}\n*** END ENTRY ***\n\n".format(s))
-    file.close()
+    # file = open("journal.txt", "a")
+    # file.write("{0}\n*** END ENTRY ***\n\n".format(s))
+    # file.close()
+    conn = sqlite3.connect('''Journal.db''')
+    cur = conn.cursor()
+    cur.execute('''CREATE TABLE IF NOT EXISTS Entries(
+    ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    EntryDate DATETIME NOT NULL DEFAULT(datetime('now', 'localtime')),
+    Entry VARCHAR NOT NULL);''')
+    cur.execute('''INSERT INTO Entries(Entry) VALUES(?);''', (s,))
+    conn.commit()
+    conn.close()
+
 
 # main program starts here
 # pick read / write mode, or quit
@@ -69,11 +96,13 @@ done = False
 while not done:
     mode = input("Do you wish to read or write?\nTip: type 'quit' to quit.\n")
     if mode.lower() == "read":
-        read_entry()
+        select_entry("1")
+        # read_entry()
         continue
     if mode.lower() == "write":
         written_entry = write_entry()
-        insert_entry(written_entry)
+        if written_entry:
+            insert_entry(written_entry)
         continue
     if mode.lower() == "quit":
         done = True
