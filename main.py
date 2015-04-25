@@ -10,7 +10,7 @@ import sqlite3
 
 #  Accepts input from the user and manipulates it.
 #  The input will be inserted in the sqlite db through the insert_entry function
-def write_entry():
+def get_format_entry():
     writing = True
     entry = ""
     print("What's on your mind?\nTip: type 'done' to finish writing the entry.\n")
@@ -27,8 +27,8 @@ def write_entry():
 
 #  Accepts input from the user and checks to see if the selected entry id exists in the database
 #  Returns the id if valid.
-#  ID is passed to the get_entry function
-def choose_entry():
+#  ID is passed to the return_entry function
+def display_entries():
         conn = sqlite3.connect("Journal.db")
         cur = conn.cursor()
         entry_list = []
@@ -61,7 +61,7 @@ def choose_entry():
 
 
 #  Returns chosen entry from the local database
-def get_entry(s):
+def return_entry(s):
     conn = sqlite3.connect("Journal.db")
     cur = conn.cursor()
     try:
@@ -98,12 +98,12 @@ running = True
 while running:
     mode = input("Do you wish to read or write?\nTip: type 'quit' to quit.\n")
     if mode.lower() == "read":
-        chosen_entry = choose_entry()
+        chosen_entry = display_entries()
         if chosen_entry:
-            get_entry(chosen_entry)
+            return_entry(chosen_entry)
         continue
     if mode.lower() == "write":
-        written_entry = write_entry()
+        written_entry = get_format_entry()
         if written_entry:
             insert_entry(written_entry)
         continue
